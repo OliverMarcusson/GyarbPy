@@ -2,6 +2,7 @@ import pygame
 import os
 from os.path import join
 
+
 class Object(pygame.sprite.Sprite):
     """
     A base class for drawable objects in a pygame application.
@@ -20,6 +21,7 @@ class Object(pygame.sprite.Sprite):
     Methods:
     - draw(screen): Draws the object on the specified screen.
     """
+
     def __init__(self, x, y, width, height, screen, name=None) -> None:
         """
     Initializes an Object instance with position, size, and screen attributes.
@@ -39,13 +41,23 @@ class Object(pygame.sprite.Sprite):
         self.screen = screen
         self.rect = pygame.Rect(x, y, width, height)
         self.image = pygame.Surface((width, height), pygame.SRCALPHA, 32)
+        self.mask = pygame.mask.from_surface(self.image)
         self.width = width
         self.height = height
         self.name = name
-        
-    def draw(self, screen):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
-        
+
+    def load_texture(self, xy: tuple[int, int], size: tuple[int, int], path="./assets/Terrain/Terrain.png"):
+        image = pygame.image.load(path).convert_alpha()
+        surface = pygame.Surface(size, pygame.SRCALPHA, 32)
+        rect = pygame.Rect(*xy, *size)
+        surface.blit(image, (0, 0), rect)
+        self.image = pygame.transform.scale2x(surface)
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def draw(self):
+        self.screen.blit(self.image, (self.rect.x, self.rect.y))
+
+
 class Block(Object):
     """
     A class representing a block in a pygame application, subclassing Object.
@@ -59,6 +71,7 @@ class Block(Object):
     Methods:
     - load_texture(xy, size): Loads a texture for the block from a sprite sheet.
     """
+
     def __init__(self, x, y, size, screen, name=None) -> None:
         """
     Initializes a Block instance as a square object with texture.
@@ -76,7 +89,7 @@ class Block(Object):
         super().__init__(x, y, size, size, screen, name=name)
         self.image = self.load_texture((96, 0), (96, 96))
         self.mask = pygame.mask.from_surface(self.image)
-        
+
     def load_texture(self, xy: tuple[int, int], size: tuple[int, int]):
         """
     Loads a specific texture from a sprite sheet for the Block object.
@@ -100,6 +113,7 @@ class Block(Object):
         path = join("assets", "Terrain", "Block.png")
         image = pygame.image.load(path).convert_alpha()
         surface = pygame.Surface(size, pygame.SRCALPHA, 32)
-        rect = pygame.Rect(*xy, *size) # 96 is the x-coordinate of the block texture in the sprite sheet
+        # 96 is the x-coordinate of the block texture in the sprite sheet
+        rect = pygame.Rect(*xy, *size)
         surface.blit(image, (0, 0), rect)
         return pygame.transform.scale2x(surface)

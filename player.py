@@ -42,7 +42,6 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.screen = screen
         self.rect = pygame.Rect(x, y, width, height)
-        self.mask = None
 
         # Sprites
         self.SPRITES = self.load_sprite_sheets(
@@ -50,6 +49,8 @@ class Player(pygame.sprite.Sprite):
         self.direction = "left"
         self.sprite = self.SPRITES[f"idle_{self.direction}"][0]
         self.animation_count = 0
+
+        self.mask = pygame.mask.from_surface(self.sprite)
 
         # Velocity
         self.x_velocity = 0
@@ -59,6 +60,7 @@ class Player(pygame.sprite.Sprite):
         self.is_jumping = False
         self.jump_count = 0
         self.fall_count = 0
+        self.colliding = False
 
     def flip(self, sprites):
         return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
@@ -124,6 +126,11 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
+    def jump(self):
+        self.y_velocity = -self.GRAVITY * 8
+        self.jump_count += 1
+        self.is_jumping = True
+
     def move_left(self):
         if self.direction != "left":
             self.direction = "left"
@@ -141,7 +148,7 @@ class Player(pygame.sprite.Sprite):
     def draw(self):
         self.screen.blit(self.sprite, (self.rect.x, self.rect.y))
 
-    def handle_movement(self):
+    def handle_movement(self, objects):
         keys = pygame.key.get_pressed()
         self.x_velocity = 0
 
@@ -149,6 +156,30 @@ class Player(pygame.sprite.Sprite):
             self.move_left()
         if keys[pygame.K_d]:
             self.move_right()
+        if keys[pygame.K_SPACE] and not self.is_jumping:
+            self.jump()
+
+        self.handle_vertical_collision(objects, self.y_velocity)
+
+    def handle_vertical_collision(self, objects, dy):
+        collided_objects = []
+
+        for obj in objects:
+            if pygame.sprite.collide_mask(self, obj) and dy > 0:
+                self.colliding = True
+                self.rect.bottom = obj.rect.top
+                self.y_velocity = 0
+                self.fall_count = 0
+                self.is_jumping = False
+                collided_objects.append(obj)
+
+            if pygame.sprite.collide_mask(self, obj) and dy < 0:
+                self.rect.top = obj.rect.bottom
+                self.y_velocity = 0
+                self.fall_count = 0
+                collided_objects.append(obj)
+
+        return collided_objects
 
     def fall(self):
         # Player is falling at least 1 pixel per frame, until it hits terminal velocity
@@ -160,6 +191,9 @@ class Player(pygame.sprite.Sprite):
 
         if self.x_velocity != 0:
             animation = "run"
+
+        if self.is_jumping:
+            animation = "jump"
 
         animation = f"{animation}_{self.direction}"
         sprites = self.SPRITES[animation]
@@ -175,9 +209,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
 
-    def loop(self):
-        # self.fall()
-        self.handle_movement()
+    def loop(self, objects):
+        self.fall()
+        self.handle_movement(objects)
         self.move(self.x_velocity, self.y_velocity)
         self.update_sprite()
 
