@@ -54,8 +54,8 @@ class Object(pygame.sprite.Sprite):
         self.image = pygame.transform.scale2x(surface)
         self.mask = pygame.mask.from_surface(self.image)
 
-    def draw(self):
-        self.screen.blit(self.image, (self.rect.x, self.rect.y))
+    def draw(self, offset_x):
+        self.screen.blit(self.image, (self.rect.x - offset_x, self.rect.y))
 
 
 class Block(Object):

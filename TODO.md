@@ -1,6 +1,2 @@
-- Player jumping
-- Working Objects
 - Colissions
 - Levels
-- Lives system
-- Timer?

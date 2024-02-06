@@ -24,13 +24,13 @@ class Background:
             for y in range(WINDOW_HEIGHT // height + 1):
                 self.tiles.append((x * width, y * height))
 
-    def draw(self):
+    def draw(self, *args):
         # Draws the background tiles over the screen
         for tile in self.tiles:
             self.screen.blit(self.image, tile)
 
 
-def draw(*args):
+def draw(offset_x, *args):
     """
     Draws all the objects passed in as arguments. Objects must be in the order they are to be drawn in.
 
@@ -38,12 +38,17 @@ def draw(*args):
     - *args: Objects to be drawn. Must have a draw() method.
     """
     for arg in args:
-        arg.draw()
+        arg.draw(offset_x)
 
 
 def floor_block(x, y, width, height, screen):
     block = Object(x, y, width, height, screen)
     block.load_texture((0, 0), (48, 48))
+    return block
+
+def course_block(x, y, width, height, screen):
+    block = Object(x, y, width, height, screen)
+    block.load_texture((208, 80), (32, 32))
     return block
 
 
@@ -60,9 +65,18 @@ def main():
     # ground_block = Object(100, 300, 96, 96, screen)
     # ground_block.load_texture((0, 0), (48, 48))
 
+    # Creating the level
     level = pygame.sprite.Group()
-    for i in range(0, WINDOW_WIDTH + 1, 96):
-        block = floor_block(i, WINDOW_HEIGHT - 96, 48, 48, screen)
+    for i in range(20):
+        block = floor_block(i*96, WINDOW_HEIGHT - 96, 48, 48, screen)
+        level.add(block)
+        
+    for i in range(20):
+        block = course_block(200 + i*64, WINDOW_HEIGHT - 96 - 256, 32, 32, screen)
+        level.add(block)
+        
+    for i in range(10):
+        block = floor_block(0, WINDOW_HEIGHT - i*96, 48, 48, screen)
         level.add(block)
 
     # Game loop
@@ -80,10 +94,10 @@ def main():
         player.loop(level)
 
         # Drawing everything
-        draw(background, player, *level)
+        draw(player.offset_x, background, player, *level)
         
         player_at_screen_right_edge = player.rect.right - player.offset_x >= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
-        player_at_screen_left_edge = player.rect.right - player.offset_x <= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
+        player_at_screen_left_edge = player.rect.left - player.offset_x <= SCROLL_AREA_WIDTH and player.x_velocity < 0
 
         if player_at_screen_right_edge or player_at_screen_left_edge:
             player.offset_x += player.x_velocity
