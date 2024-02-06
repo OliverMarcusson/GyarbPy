@@ -41,7 +41,7 @@ def draw(*args):
         arg.draw()
 
 
-def level_block(x, y, width, height, screen):
+def floor_block(x, y, width, height, screen):
     block = Object(x, y, width, height, screen)
     block.load_texture((0, 0), (48, 48))
     return block
