@@ -5,6 +5,7 @@ from os.path import join
 from object import Object
 
 WINDOW_WIDTH = 800
+SCROLL_AREA_WIDTH = 200
 WINDOW_HEIGHT = 600
 FPS = 60
 
@@ -40,7 +41,7 @@ def draw(*args):
         arg.draw()
 
 
-def floor_block(x, y, width, height, screen):
+def level_block(x, y, width, height, screen):
     block = Object(x, y, width, height, screen)
     block.load_texture((0, 0), (48, 48))
     return block
@@ -59,10 +60,10 @@ def main():
     # ground_block = Object(100, 300, 96, 96, screen)
     # ground_block.load_texture((0, 0), (48, 48))
 
-    floor = pygame.sprite.Group()
+    level = pygame.sprite.Group()
     for i in range(0, WINDOW_WIDTH + 1, 96):
         block = floor_block(i, WINDOW_HEIGHT - 96, 48, 48, screen)
-        floor.add(block)
+        level.add(block)
 
     # Game loop
     running = True
@@ -76,10 +77,17 @@ def main():
                 break
 
         # Player
-        player.loop(floor)
+        player.loop(level)
 
         # Drawing everything
-        draw(background, player, *floor)
+        draw(background, player, *level)
+        
+        player_at_screen_right_edge = player.rect.right - player.offset_x >= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
+        player_at_screen_left_edge = player.rect.right - player.offset_x <= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
+
+        if player_at_screen_right_edge or player_at_screen_left_edge:
+            player.offset_x += player.x_velocity
+        
         pygame.display.update()
 
     # Quit the game when the game loop is exited
