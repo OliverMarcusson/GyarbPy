@@ -59,6 +59,7 @@ class Player(pygame.sprite.Sprite):
 
         # Jumping
         self.is_jumping = False
+        self.on_ground = False
         self.jump_count = 0
         self.fall_count = 0
         self.colliding = False
@@ -131,6 +132,7 @@ class Player(pygame.sprite.Sprite):
         self.y_velocity = -self.GRAVITY * 8
         self.jump_count += 1
         self.is_jumping = True
+        self.on_ground = False
 
     def move_left(self):
         if self.direction != "left":
@@ -169,15 +171,16 @@ class Player(pygame.sprite.Sprite):
         collided_objects = []
 
         for obj in objects:
-            if pygame.sprite.collide_mask(self, obj) and dy > 0:
+            if pygame.sprite.collide_mask(self, obj) and dy > 0.5:
                 self.colliding = True
                 self.rect.bottom = obj.rect.top
                 self.y_velocity = 0
                 self.fall_count = 0
                 self.is_jumping = False
+                self.on_ground = True
                 collided_objects.append(obj)
 
-            if pygame.sprite.collide_mask(self, obj) and dy < 0:
+            if pygame.sprite.collide_mask(self, obj) and dy < -0.5:
                 self.rect.top = obj.rect.bottom
                 self.move(0, -dy * 10)
                 self.y_velocity = self.GRAVITY
@@ -229,6 +232,7 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.sprite)
 
     def loop(self, objects):
+        # if not self.on_ground:
         self.fall()
         self.handle_movement(objects)
         self.move(self.x_velocity, self.y_velocity)
