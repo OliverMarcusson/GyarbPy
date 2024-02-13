@@ -59,6 +59,7 @@ class Player(pygame.sprite.Sprite):
 
         # Jumping
         self.is_jumping = False
+        self.on_ground = False
         self.jump_count = 0
         self.fall_count = 0
         self.colliding = False
@@ -131,6 +132,7 @@ class Player(pygame.sprite.Sprite):
         self.y_velocity = -self.GRAVITY * 8
         self.jump_count += 1
         self.is_jumping = True
+        self.on_ground = False
 
     def move_left(self):
         if self.direction != "left":
@@ -147,7 +149,8 @@ class Player(pygame.sprite.Sprite):
         self.x_velocity = self.VELOCITY
 
     def draw(self, *args):
-        self.screen.blit(self.sprite, (self.rect.x - self.offset_x, self.rect.y))
+        self.screen.blit(self.sprite, (self.rect.x -
+                         self.offset_x, self.rect.y))
 
     def handle_movement(self, objects):
         keys = pygame.key.get_pressed()
@@ -161,24 +164,23 @@ class Player(pygame.sprite.Sprite):
             self.move_right()
         if keys[pygame.K_SPACE] and not self.is_jumping:
             self.jump()
-        
+
         self.handle_vertical_collision(objects, self.y_velocity)
 
     def handle_vertical_collision(self, objects, dy):
         collided_objects = []
 
         for obj in objects:
-            if pygame.sprite.collide_mask(self, obj) and dy > 0:
-                print("Teleporting to top of block")
+            if pygame.sprite.collide_mask(self, obj) and dy > 0.5:
                 self.colliding = True
                 self.rect.bottom = obj.rect.top
                 self.y_velocity = 0
                 self.fall_count = 0
                 self.is_jumping = False
+                self.on_ground = True
                 collided_objects.append(obj)
 
-            if pygame.sprite.collide_mask(self, obj) and dy < 0:
-                print("Hit head")
+            if pygame.sprite.collide_mask(self, obj) and dy < -0.5:
                 self.rect.top = obj.rect.bottom
                 self.move(0, -dy * 10)
                 self.y_velocity = self.GRAVITY
@@ -187,11 +189,11 @@ class Player(pygame.sprite.Sprite):
                 collided_objects.append(obj)
 
         return collided_objects
-    
+
     def collide_check(self, objects, dx):
         self.move(dx, 0)
         self.update_colliders()
-        
+
         for obj in objects:
             if pygame.sprite.collide_mask(self, obj):
                 self.move(-dx, 0)
@@ -211,7 +213,7 @@ class Player(pygame.sprite.Sprite):
 
         if self.is_jumping:
             animation = "jump"
-        
+
         if self.is_jumping and self.y_velocity < 0:
             animation = "fall"
 
@@ -230,6 +232,7 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.sprite)
 
     def loop(self, objects):
+        # if not self.on_ground:
         self.fall()
         self.handle_movement(objects)
         self.move(self.x_velocity, self.y_velocity)

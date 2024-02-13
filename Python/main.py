@@ -1,33 +1,16 @@
 import pygame
 from player import Player
-import os
-from os.path import join
-from object import Object
+from level import create_level
+from background import Background
+# import os
+# from os.path import join
+# from object import Object
+
 
 WINDOW_WIDTH = 800
 SCROLL_AREA_WIDTH = 200
 WINDOW_HEIGHT = 600
 FPS = 60
-
-
-class Background:
-    def __init__(self, color, screen):
-        self.screen = screen
-
-        self.image = pygame.image.load(
-            join("assets", "Background", color + ".png"))
-        _, _, width, height = self.image.get_rect()
-
-        self.tiles = []
-        # Creates a list of tiles for the background
-        for x in range(WINDOW_WIDTH // width + 1):
-            for y in range(WINDOW_HEIGHT // height + 1):
-                self.tiles.append((x * width, y * height))
-
-    def draw(self, *args):
-        # Draws the background tiles over the screen
-        for tile in self.tiles:
-            self.screen.blit(self.image, tile)
 
 
 def draw(offset_x, *args):
@@ -39,17 +22,6 @@ def draw(offset_x, *args):
     """
     for arg in args:
         arg.draw(offset_x)
-
-
-def floor_block(x, y, width, height, screen):
-    block = Object(x, y, width, height, screen)
-    block.load_texture((0, 0), (48, 48))
-    return block
-
-def course_block(x, y, width, height, screen):
-    block = Object(x, y, width, height, screen)
-    block.load_texture((208, 80), (32, 32))
-    return block
 
 
 def main():
@@ -66,18 +38,7 @@ def main():
     # ground_block.load_texture((0, 0), (48, 48))
 
     # Creating the level
-    level = pygame.sprite.Group()
-    for i in range(20):
-        block = floor_block(i*96, WINDOW_HEIGHT - 96, 48, 48, screen)
-        level.add(block)
-        
-    for i in range(20):
-        block = course_block(200 + i*64, WINDOW_HEIGHT - 96 - 256, 32, 32, screen)
-        level.add(block)
-        
-    for i in range(10):
-        block = floor_block(0, WINDOW_HEIGHT - i*96, 48, 48, screen)
-        level.add(block)
+    level = create_level(screen)
 
     # Game loop
     running = True
@@ -95,13 +56,15 @@ def main():
 
         # Drawing everything
         draw(player.offset_x, background, player, *level)
-        
-        player_at_screen_right_edge = player.rect.right - player.offset_x >= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
-        player_at_screen_left_edge = player.rect.left - player.offset_x <= SCROLL_AREA_WIDTH and player.x_velocity < 0
+
+        player_at_screen_right_edge = player.rect.right - \
+            player.offset_x >= WINDOW_WIDTH - SCROLL_AREA_WIDTH and player.x_velocity > 0
+        player_at_screen_left_edge = player.rect.left - \
+            player.offset_x <= SCROLL_AREA_WIDTH and player.x_velocity < 0
 
         if player_at_screen_right_edge or player_at_screen_left_edge:
             player.offset_x += player.x_velocity
-        
+
         pygame.display.update()
 
     # Quit the game when the game loop is exited
